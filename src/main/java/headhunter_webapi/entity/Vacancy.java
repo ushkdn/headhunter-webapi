@@ -9,7 +9,7 @@ public class Vacancy {
     private String description;
     private Integer minSalary;
     private Integer maxSalary;
-    private byte minYearsOfExperience;
-    private byte maxYearsOfExperience;
+    private Byte minYearsOfExperience;
+    private Byte maxYearsOfExperience;
     private LocalDate dateOfPublication;
 }

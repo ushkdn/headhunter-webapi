@@ -1,7 +1,7 @@
 package headhunter_webapi.entity;
 
 public class Resume {
-    byte id;
+    Byte id;
     User owner;
 
 }
