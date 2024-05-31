@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @SpringBootApplication
-@SecurityRequirement(name="Bearer token")
-@Tag(name = "TestController")
 public class HeadhunterWebapiApplication {
 
 	public static void main(String[] args) {
