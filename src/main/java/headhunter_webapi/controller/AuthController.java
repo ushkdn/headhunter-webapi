@@ -1,6 +1,5 @@
 package headhunter_webapi.controller;
 
-import headhunter_webapi.service.authService.AuthService;
 import headhunter_webapi.service.authService.IAuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RequestMapping;

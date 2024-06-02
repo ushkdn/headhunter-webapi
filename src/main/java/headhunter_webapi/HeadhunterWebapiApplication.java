@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 public class HeadhunterWebapiApplication {
 
+	//TODO: db relationships & complete entities
+
 	public static void main(String[] args) {
 		SpringApplication.run(HeadhunterWebapiApplication.class, args);
 	}
