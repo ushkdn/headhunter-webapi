@@ -7,27 +7,11 @@ import jakarta.persistence.*;
 public class Resume {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Byte id;
-    //User owner;
-
-    public Resume(Byte id) {
-        this.id = id;
-       // this.owner = owner;
-    }
-
-    public Byte getId() {
-        return id;
-    }
-
-    public void setId(Byte id) {
-        this.id = id;
-    }
-
-//    public User getOwner() {
-//        return owner;
-//    }
-//
-//    public void setOwner(User owner) {
-//        this.owner = owner;
-//    }
+    private Byte id;
+   // private User owner;
+    private String speciality;
+    private Byte yearsOfExperience;
+    private String expectedSalary;
+   // private WorkPlan workPlan;
+   // private WorkMode workMode;
 }
