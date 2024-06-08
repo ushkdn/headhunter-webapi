@@ -21,6 +21,24 @@ public class User {
     private String password;
     private LocalDate dateOfBirth;
     private String location;
+    private Boolean isVerified = false;
+    private String secretCode = "testCode";
+
+    public Boolean getVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(Boolean verified) {
+        isVerified = verified;
+    }
+
+    public String getSecretCode() {
+        return secretCode;
+    }
+
+    public void setSecretCode(String secretCode) {
+        this.secretCode = secretCode;
+    }
     //private Resume resume;
 
 
