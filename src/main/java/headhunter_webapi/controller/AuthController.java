@@ -8,11 +8,7 @@ import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.service.authService.IAuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.Serial;
 
 @RestController
 @RequestMapping("api/auth")

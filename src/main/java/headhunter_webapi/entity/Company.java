@@ -2,7 +2,6 @@ package headhunter_webapi.entity;
 
 import jakarta.persistence.*;
 
-import java.util.List;
 
 @Entity
 @Table(name = "Company")

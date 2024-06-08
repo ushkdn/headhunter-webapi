@@ -4,7 +4,6 @@ import headhunter_webapi.dto.authDto.ForgotPasswordDto;
 import headhunter_webapi.dto.authDto.LogInUserDto;
 import headhunter_webapi.dto.authDto.RegisterUserDto;
 import headhunter_webapi.dto.authDto.ResetPasswordDto;
-import headhunter_webapi.dto.userDto.GetUserDto;
 import headhunter_webapi.entity.ServiceResponse;
 
 public interface IAuthService {
