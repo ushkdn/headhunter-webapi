@@ -8,16 +8,26 @@ import java.time.LocalDate;
 @Table(name="user_")
 public class User {
     @Id
+    @Column(name="Id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "firstName")
     private String firstName;
+    @Column(name = "lastName")
     private String lastName;
+    @Column(name = "phoneNumber")
     private String phoneNumber;
+    @Column(name = "email")
     private String email;
+    @Column(name = "password")
     private String password;
+    @Column(name = "dateOfBirth")
     private LocalDate dateOfBirth;
+    @Column(name = "location")
     private String location;
+    @Column(name = "isVerified")
     private Boolean isVerified = false;
+    @Column(name = "secretCode")
     private String secretCode = "testCode";
     //private Resume resume;
 

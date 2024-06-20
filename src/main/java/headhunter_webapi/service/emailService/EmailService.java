@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 public class EmailService implements IEmailService{
     @Override
     public ServiceResponse<String> sendEmail(String topic, String recipientEmail) {
+        return null;
     }
 
     @Override
@@ -20,6 +21,6 @@ public class EmailService implements IEmailService{
     }
 
     private String CreateSecurityCode(){
-
+        return null;
     }
 }
