@@ -4,6 +4,7 @@ import headhunter_webapi.dto.authDto.ForgotPasswordDto;
 import headhunter_webapi.dto.authDto.LogInUserDto;
 import headhunter_webapi.dto.authDto.RegisterUserDto;
 import headhunter_webapi.dto.authDto.ResetPasswordDto;
+import headhunter_webapi.entity.AuthTokens;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.service.authService.IAuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,11 +24,11 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ServiceResponse<String> register(@Valid @RequestBody RegisterUserDto newUser){
+    public ServiceResponse<AuthTokens> register(@Valid @RequestBody RegisterUserDto newUser){
         return _authService.register(newUser);
     }
     @PostMapping("/log-in")
-    public ServiceResponse<String> logIn(@Valid @RequestBody LogInUserDto user){
+    public ServiceResponse<AuthTokens> logIn(@Valid @RequestBody LogInUserDto user){
         return _authService.logIn(user);
     }
 

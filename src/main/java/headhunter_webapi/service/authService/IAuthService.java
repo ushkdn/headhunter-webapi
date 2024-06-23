@@ -4,12 +4,13 @@ import headhunter_webapi.dto.authDto.ForgotPasswordDto;
 import headhunter_webapi.dto.authDto.LogInUserDto;
 import headhunter_webapi.dto.authDto.RegisterUserDto;
 import headhunter_webapi.dto.authDto.ResetPasswordDto;
+import headhunter_webapi.entity.AuthTokens;
 import headhunter_webapi.entity.ServiceResponse;
 
 public interface IAuthService {
-    ServiceResponse<String> register(RegisterUserDto newUser);
+    ServiceResponse<AuthTokens> register(RegisterUserDto newUser);
 
-    ServiceResponse<String> logIn(LogInUserDto user);
+    ServiceResponse<AuthTokens> logIn(LogInUserDto user);
 
     ServiceResponse<String> forgotPassword(ForgotPasswordDto userMetaData);
 

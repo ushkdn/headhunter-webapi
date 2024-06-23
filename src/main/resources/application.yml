@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:6543/headhunter
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+application:
+  security:
+    jwt:
+      secret-key: e97d3f8c96f7ccd22d302c7b3c61e646b8f4ba4bdea93c81ea934a164fb7d31bd87a335586352a7d3b43d108ecdf7ede235454fbcc9d038d44763585eeca144d
+      expiration: 86400000 # a day
+      refresh-token:
+        expiration: 604800000 # 7 days

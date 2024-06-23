@@ -6,6 +6,7 @@ import headhunter_webapi.dto.authDto.RegisterUserDto;
 import headhunter_webapi.dto.authDto.ResetPasswordDto;
 import headhunter_webapi.dto.mapper.authMapper.RegisterUserDtoMapper;
 import headhunter_webapi.dto.mapper.userMapper.GetUserDtoMapper;
+import headhunter_webapi.entity.AuthTokens;
 import headhunter_webapi.entity.Role;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.repository.UserRepository;
@@ -38,8 +39,8 @@ public class AuthService implements IAuthService{
     }
 
     @Override
-    public ServiceResponse<String> register(RegisterUserDto newUser) {
-        var serviceResponse = new ServiceResponse<String>();
+    public ServiceResponse<AuthTokens> register(RegisterUserDto newUser) {
+        var serviceResponse = new ServiceResponse<AuthTokens>();
         try{
             var user = _registerUserDtoMapper.apply(newUser);
             if(_userRepository.findUserByEmail(user.getEmail()).isPresent()){
@@ -52,7 +53,8 @@ public class AuthService implements IAuthService{
 
             _userRepository.save(user);
             var jwtToken= _tokenService.generateToken(user);
-            serviceResponse.data=jwtToken;
+            var refreshToken= _tokenService.generateRefreshToken(user);
+            serviceResponse.data=new AuthTokens(jwtToken, refreshToken);
             serviceResponse.message="You have successfully registered.";
             serviceResponse.success=true;
         }catch(Exception ex){
@@ -64,8 +66,8 @@ public class AuthService implements IAuthService{
     }
 
     @Override
-    public ServiceResponse<String> logIn(LogInUserDto user) {
-        var serviceResponse = new ServiceResponse<String>();
+    public ServiceResponse<AuthTokens> logIn(LogInUserDto user) {
+        var serviceResponse = new ServiceResponse<AuthTokens>();
         try{
             var storedUser = _userRepository.findUserByEmail(user.email()).orElseThrow(()->new Exception("User not found."));
             var bcryptVerification = new BCryptPasswordEncoder();
@@ -79,7 +81,8 @@ public class AuthService implements IAuthService{
                     )
             );
             var jwtToken = _tokenService.generateToken(storedUser);
-            serviceResponse.data=jwtToken;
+            var refreshToken= _tokenService.generateRefreshToken(storedUser);
+            serviceResponse.data=new AuthTokens(jwtToken, refreshToken);
             serviceResponse.message="You have successfully logged in";
             serviceResponse.success=true;
         }catch(Exception ex){
