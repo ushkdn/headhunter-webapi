@@ -6,9 +6,15 @@ import headhunter_webapi.dto.authDto.RegisterUserDto;
 import headhunter_webapi.dto.authDto.ResetPasswordDto;
 import headhunter_webapi.dto.mapper.authMapper.RegisterUserDtoMapper;
 import headhunter_webapi.dto.mapper.userMapper.GetUserDtoMapper;
+import headhunter_webapi.entity.Role;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.repository.UserRepository;
+import headhunter_webapi.service.tokenService.TokenService;
+import org.antlr.v4.runtime.Token;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
@@ -18,11 +24,17 @@ public class AuthService implements IAuthService{
     private final UserRepository _userRepository;
     private final RegisterUserDtoMapper _registerUserDtoMapper;
     private final GetUserDtoMapper _getUserDtoMapper;
+    private final PasswordEncoder _passwordEncoder;
+    private final TokenService _tokenService;
+    private final AuthenticationManager _authManager;
 
-    public AuthService(UserRepository userRepository, RegisterUserDtoMapper registerUserDtoMapper, GetUserDtoMapper getUserDtoMapper) {
+    public AuthService(UserRepository userRepository, RegisterUserDtoMapper registerUserDtoMapper, GetUserDtoMapper getUserDtoMapper, PasswordEncoder passwordEncoder, TokenService tokenService, AuthenticationManager authManager) {
         _userRepository = userRepository;
         _registerUserDtoMapper = registerUserDtoMapper;
         _getUserDtoMapper = getUserDtoMapper;
+        _passwordEncoder = passwordEncoder;
+        _tokenService = tokenService;
+        _authManager = authManager;
     }
 
     @Override
@@ -34,12 +46,15 @@ public class AuthService implements IAuthService{
                 throw new Exception("Email already taken!");
             }
             var bcrypt = new BCryptPasswordEncoder();
-            user.setPassword(bcrypt.encode(user.getPassword()));
+            user.setPassword(_passwordEncoder.encode(user.getPassword()));
+            user.setRole(Role.USER);
             //email sender here with confirmation code(need verify)
-            serviceResponse.data=null;
+
+            _userRepository.save(user);
+            var jwtToken= _tokenService.generateToken(user);
+            serviceResponse.data=jwtToken;
             serviceResponse.message="You have successfully registered.";
             serviceResponse.success=true;
-            _userRepository.save(user);
         }catch(Exception ex){
             serviceResponse.data=null;
             serviceResponse.message=ex.getMessage();
@@ -57,7 +72,14 @@ public class AuthService implements IAuthService{
             if(!bcryptVerification.matches(user.password(), storedUser.getPassword())){
                 throw new Exception("Wrong password.");
             }
-            serviceResponse.data=null;
+            _authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            user.email(),
+                            user.password()
+                    )
+            );
+            var jwtToken = _tokenService.generateToken(storedUser);
+            serviceResponse.data=jwtToken;
             serviceResponse.message="You have successfully logged in";
             serviceResponse.success=true;
         }catch(Exception ex){

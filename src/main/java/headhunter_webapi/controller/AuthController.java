@@ -21,6 +21,7 @@ public class AuthController {
         _authService=authService;
     }
 
+
     @PostMapping("/register")
     public ServiceResponse<String> register(@Valid @RequestBody RegisterUserDto newUser){
         return _authService.register(newUser);

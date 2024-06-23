@@ -1,77 +1,53 @@
 package headhunter_webapi.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
-
+import java.util.Collection;
+import java.util.List;
 @Entity
 @Table(name="user_")
-public class User {
+public class User implements UserDetails {
     @Id
     @Column(name="Id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "firstName")
+    @Column(name = "FirstName")
     private String firstName;
-    @Column(name = "lastName")
+    @Column(name = "LastName")
     private String lastName;
-    @Column(name = "phoneNumber")
+    @Column(name = "PhoneNumber")
     private String phoneNumber;
-    @Column(name = "email")
+    @Column(name = "Email")
     private String email;
-    @Column(name = "password")
+    @Column(name = "Password")
     private String password;
-    @Column(name = "dateOfBirth")
+    @Column(name = "DateOfBirth")
     private LocalDate dateOfBirth;
-    @Column(name = "location")
+    @Column(name = "Location")
     private String location;
-    @Column(name = "isVerified")
+    @Enumerated(EnumType.STRING)
+    @Column(name="Role")
+    private Role role;
+    @Column(name = "IsVerified")
     private Boolean isVerified = false;
-    @Column(name = "secretCode")
+    @Column(name = "SecretCode")
     private String secretCode = "testCode";
+    @Column(name="RefreshToken")
+    private String refreshToken;
+    @Column(name="TokenCreated")
+    private LocalDate tokenCreated;
+    @Column(name="TokenExpires")
+    private LocalDate  tokenExpires;
     //private Resume resume;
 
-
-    public Boolean getVerified() {
-        return isVerified;
-    }
-
-    public void setVerified(Boolean verified) {
-        isVerified = verified;
-    }
-
-    public String getSecretCode() {
-        return secretCode;
-    }
-
-    public void setSecretCode(String secretCode) {
-        this.secretCode = secretCode;
-    }
-
-
-    public User() {
-    }
-
-    public User(Long id, String firstName, String lastName, String phoneNumber, String email, String password, LocalDate dateOfBirth, String location) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phoneNumber = phoneNumber;
-        this.email = email;
-        this.password = password;
-        this.dateOfBirth = dateOfBirth;
-        this.location = location;
-    }
-
-    public User(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate dateOfBirth, String location) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phoneNumber = phoneNumber;
-        this.email = email;
-        this.password = password;
-        this.dateOfBirth = dateOfBirth;
-        this.location = location;
-    }
 
     public Long getId() {
         return id;
@@ -113,10 +89,6 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
     }
@@ -137,11 +109,99 @@ public class User {
         this.location = location;
     }
 
-//    public Resume getResume() {
-//        return resume;
-//    }
-//
-//    public void setResume(Resume resume) {
-//        this.resume = resume;
-//    }
+    public Role getRole() {
+        return role;
+    }
+
+    public User(String firstName, String lastName, String phoneNumber, String email, String password, LocalDate dateOfBirth, String location) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+        this.password = password;
+        this.dateOfBirth = dateOfBirth;
+        this.location = location;
+    }
+    public User(){
+
+    }
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public Boolean getVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(Boolean verified) {
+        isVerified = verified;
+    }
+
+    public String getSecretCode() {
+        return secretCode;
+    }
+
+    public void setSecretCode(String secretCode) {
+        this.secretCode = secretCode;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public LocalDate getTokenCreated() {
+        return tokenCreated;
+    }
+
+    public void setTokenCreated(LocalDate tokenCreated) {
+        this.tokenCreated = tokenCreated;
+    }
+
+    public LocalDate getTokenExpires() {
+        return tokenExpires;
+    }
+
+    public void setTokenExpires(LocalDate tokenExpires) {
+        this.tokenExpires = tokenExpires;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+
 }

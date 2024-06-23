@@ -16,6 +16,10 @@ public class Resume {
     private Byte yearsOfExperience;
     @Column(name="ExpectedSalary")
     private String expectedSalary;
-   // private WorkPlan workPlan;
-   // private WorkMode workMode;
+    @Enumerated(EnumType.STRING)
+    @Column(name="WorkPlan")
+    private WorkPlan workPlan;
+    @Enumerated(EnumType.STRING)
+    @Column(name="WorkMode")
+    private WorkMode workMode;
 }

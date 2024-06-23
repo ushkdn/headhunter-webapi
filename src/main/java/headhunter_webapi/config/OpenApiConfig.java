@@ -1,4 +1,4 @@
-package headhunter_webapi.utils;
+package headhunter_webapi.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
