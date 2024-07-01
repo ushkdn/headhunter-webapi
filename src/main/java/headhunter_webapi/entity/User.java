@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 @Entity
 @Table(name="user_")
@@ -43,9 +44,9 @@ public class User implements UserDetails {
     @Column(name="RefreshToken")
     private String refreshToken;
     @Column(name="TokenCreated")
-    private LocalDate tokenCreated;
+    private Date tokenCreated;
     @Column(name="TokenExpires")
-    private LocalDate  tokenExpires;
+    private Date tokenExpires;
     //private Resume resume;
 
 
@@ -153,19 +154,19 @@ public class User implements UserDetails {
         this.refreshToken = refreshToken;
     }
 
-    public LocalDate getTokenCreated() {
+    public Date getTokenCreated() {
         return tokenCreated;
     }
 
-    public void setTokenCreated(LocalDate tokenCreated) {
+    public void setTokenCreated(    Date tokenCreated) {
         this.tokenCreated = tokenCreated;
     }
 
-    public LocalDate getTokenExpires() {
+    public Date getTokenExpires() {
         return tokenExpires;
     }
 
-    public void setTokenExpires(LocalDate tokenExpires) {
+    public void setTokenExpires(Date tokenExpires) {
         this.tokenExpires = tokenExpires;
     }
 

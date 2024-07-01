@@ -1,11 +1,6 @@
 package headhunter_webapi.service.tokenService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import headhunter_webapi.entity.AuthTokens;
-import headhunter_webapi.entity.Token;
-import headhunter_webapi.entity.TokenType;
-import headhunter_webapi.entity.User;
-import headhunter_webapi.repository.TokenRepository;
 import headhunter_webapi.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -30,12 +25,10 @@ import java.util.function.Function;
 @Service
 public class TokenService implements ITokenService{
     private final UserRepository _userRepository;
-    private final TokenRepository _tokenRepository;
 
 
-    public TokenService(UserRepository userRepository, TokenRepository tokenRepository){
+    public TokenService(UserRepository userRepository){
         _userRepository=userRepository;
-        _tokenRepository = tokenRepository;
     }
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
@@ -57,9 +50,20 @@ public class TokenService implements ITokenService{
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails){
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
-    public String generateRefreshToken( UserDetails userDetails){
-        return buildToken( new HashMap<>(), userDetails, refreshExpiration);
+    public String generateRefreshToken(UserDetails userDetails){
+        String refreshToken=buildToken( new HashMap<>(), userDetails, refreshExpiration);
+        saveRefreshToken(refreshToken);
+        return refreshToken;
     }
+
+    private void saveRefreshToken(String refreshToken){
+        var storedUser=_userRepository.findUserByEmail(extractUserEmail(refreshToken)).orElseThrow();
+        storedUser.setRefreshToken(refreshToken);
+        storedUser.setTokenCreated(extractCreation(refreshToken));
+        storedUser.setTokenExpires(extractExpiration(refreshToken));
+        _userRepository.save(storedUser);
+    }
+
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         final String refreshToken;
@@ -73,24 +77,9 @@ public class TokenService implements ITokenService{
             var user = _userRepository.findUserByEmail(userEmail).orElseThrow();
             if(isTokenValid(refreshToken, user)){
                 var accessToken=generateToken(user);
-                revokeAllUserTokens(user);
-                saveUserToken(user,accessToken);
-                var authTokens=new AuthTokens(accessToken, refreshToken);
-                new ObjectMapper().writeValue(response.getOutputStream(),authTokens);
+                new ObjectMapper().writeValue(response.getOutputStream(),accessToken);
             }
         }
-    }
-    private void revokeAllUserTokens(User user) {
-        var validUserToken = _tokenRepository.findValidTokenByUser(user.getId());
-        if (validUserToken==null)
-            return;
-        validUserToken.setExpired(true);
-        validUserToken.setRevoked(true);
-        _tokenRepository.save(validUserToken);
-    }
-    private void saveUserToken(User user, String jwtToken) {
-        var token = new Token(jwtToken, TokenType.BEARER, false,false,user);
-        _tokenRepository.save(token);
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration){
@@ -113,6 +102,9 @@ public class TokenService implements ITokenService{
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+    private Date extractCreation(String token){
+        return extractClaim(token, Claims::getIssuedAt);
     }
 
     private Claims extractAllClaims(String token) {
