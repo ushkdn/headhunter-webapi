@@ -1,6 +1,7 @@
 package headhunter_webapi.service.tokenService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import headhunter_webapi.entity.AuthTokens;
 import headhunter_webapi.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -64,12 +65,12 @@ public class TokenService implements ITokenService{
         _userRepository.save(storedUser);
     }
 
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public AuthTokens refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         final String refreshToken;
         final String userEmail;
         if(authHeader == null || !authHeader.startsWith("Bearer ")){
-            return;
+            return new AuthTokens("pizda1", "pizda1");
         }
         refreshToken= authHeader.substring(7);
         userEmail=extractUserEmail(refreshToken);
@@ -77,9 +78,11 @@ public class TokenService implements ITokenService{
             var user = _userRepository.findUserByEmail(userEmail).orElseThrow();
             if(isTokenValid(refreshToken, user)){
                 var accessToken=generateToken(user);
-                new ObjectMapper().writeValue(response.getOutputStream(),accessToken);
+                var newRefreshToken=generateRefreshToken(user);
+                return new AuthTokens(accessToken, newRefreshToken);
             }
         }
+        return new AuthTokens("pizda2", "pizda2");
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration){

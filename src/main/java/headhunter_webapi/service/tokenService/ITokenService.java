@@ -1,10 +1,11 @@
 package headhunter_webapi.service.tokenService;
 
+import headhunter_webapi.entity.AuthTokens;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
 public interface ITokenService {
-    void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException;
+    AuthTokens refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException;
 }

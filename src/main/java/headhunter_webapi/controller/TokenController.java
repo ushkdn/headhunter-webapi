@@ -1,7 +1,9 @@
 package headhunter_webapi.controller;
 
+import headhunter_webapi.entity.AuthTokens;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.service.tokenService.ITokenService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,6 +15,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("api/token")
+@SecurityRequirement(name="Bearer token")
 @Tag(name = "TokenController")
 public class TokenController {
 
@@ -22,7 +25,7 @@ public class TokenController {
         _tokenService=tokenService;
     }
     @PostMapping("/refresh-token")
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response ) throws IOException {
-        _tokenService.refreshToken(request, response);
+    public AuthTokens refreshToken(HttpServletRequest request, HttpServletResponse response ) throws IOException {
+        return _tokenService.refreshToken(request, response);
     }
 }
