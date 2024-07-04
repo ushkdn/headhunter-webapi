@@ -11,7 +11,14 @@ import headhunter_webapi.entity.Role;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.repository.UserRepository;
 import headhunter_webapi.service.tokenService.TokenService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.antlr.v4.runtime.Token;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -39,7 +46,7 @@ public class AuthService implements IAuthService{
     }
 
     @Override
-    public ServiceResponse<AuthTokens> register(RegisterUserDto newUser) {
+    public ServiceResponse<AuthTokens> register(RegisterUserDto newUser, HttpServletResponse response) {
         var serviceResponse = new ServiceResponse<AuthTokens>();
         try{
             var user = _registerUserDtoMapper.apply(newUser);
@@ -54,6 +61,11 @@ public class AuthService implements IAuthService{
             _userRepository.save(user);
             var jwtToken= _tokenService.generateToken(user);
             var refreshToken= _tokenService.generateRefreshToken(user);
+            Cookie cookie = new Cookie("refreshToken", refreshToken);
+            cookie.setHttpOnly(true);
+            cookie.setMaxAge(7 * 24 * 60 * 60+3*60*60);
+            cookie.setPath("/");
+            response.addCookie(cookie);
             serviceResponse.data=new AuthTokens(jwtToken, refreshToken);
             serviceResponse.message="You have successfully registered.";
             serviceResponse.success=true;
@@ -66,7 +78,7 @@ public class AuthService implements IAuthService{
     }
 
     @Override
-    public ServiceResponse<AuthTokens> logIn(LogInUserDto user) {
+    public ServiceResponse<AuthTokens> logIn(LogInUserDto user, HttpServletResponse response) {
         var serviceResponse = new ServiceResponse<AuthTokens>();
         try{
             var storedUser = _userRepository.findUserByEmail(user.email()).orElseThrow(()->new Exception("User not found."));
@@ -82,6 +94,11 @@ public class AuthService implements IAuthService{
             );
             var jwtToken = _tokenService.generateToken(storedUser);
             var refreshToken= _tokenService.generateRefreshToken(storedUser);
+            Cookie cookie = new Cookie("refreshToken", refreshToken);
+            cookie.setHttpOnly(true);
+            cookie.setMaxAge(7 * 24 * 60 * 60+3*60*60);
+            cookie.setPath("/");
+            response.addCookie(cookie);
             serviceResponse.data=new AuthTokens(jwtToken, refreshToken);
             serviceResponse.message="You have successfully logged in";
             serviceResponse.success=true;

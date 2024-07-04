@@ -8,7 +8,9 @@ import headhunter_webapi.entity.AuthTokens;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.service.authService.IAuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,12 +26,12 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ServiceResponse<AuthTokens> register(@Valid @RequestBody RegisterUserDto newUser){
-        return _authService.register(newUser);
+    public ServiceResponse<AuthTokens> register(@Valid @RequestBody RegisterUserDto newUser, HttpServletResponse response){
+        return _authService.register(newUser, response);
     }
     @PostMapping("/log-in")
-    public ServiceResponse<AuthTokens> logIn(@Valid @RequestBody LogInUserDto user){
-        return _authService.logIn(user);
+    public ServiceResponse<AuthTokens> logIn(@Valid @RequestBody LogInUserDto user, HttpServletResponse response){
+        return _authService.logIn(user, response);
     }
 
     @PostMapping("/forgot-password")

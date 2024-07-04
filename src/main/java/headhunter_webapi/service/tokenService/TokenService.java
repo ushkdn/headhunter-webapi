@@ -2,12 +2,14 @@ package headhunter_webapi.service.tokenService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import headhunter_webapi.entity.AuthTokens;
+import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.security.Key;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,25 +67,48 @@ public class TokenService implements ITokenService{
         storedUser.setTokenExpires(extractExpiration(refreshToken));
         _userRepository.save(storedUser);
     }
-
-    public AuthTokens refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        final String refreshToken;
-        final String userEmail;
-        if(authHeader == null || !authHeader.startsWith("Bearer ")){
-            return new AuthTokens("pizda1", "pizda1");
-        }
-        refreshToken= authHeader.substring(7);
-        userEmail=extractUserEmail(refreshToken);
-        if(userEmail!=null && SecurityContextHolder.getContext().getAuthentication()==null){
-            var user = _userRepository.findUserByEmail(userEmail).orElseThrow();
-            if(isTokenValid(refreshToken, user)){
-                var accessToken=generateToken(user);
-                var newRefreshToken=generateRefreshToken(user);
-                return new AuthTokens(accessToken, newRefreshToken);
+    public static Cookie findCookieByName(Cookie[] cookies, String name) {
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(name)) {
+                    return cookie;
+                }
             }
         }
-        return new AuthTokens("pizda2", "pizda2");
+        return null;
+    }
+    public String refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var serviceResponse=new ServiceResponse<AuthTokens>();
+        Cookie[] cookies = request.getCookies();
+        Cookie refreshTokenCookie = findCookieByName(cookies, "refreshToken");
+
+
+        if(refreshTokenCookie==null){
+            return "err1";
+        }
+        final String userEmail=extractUserEmail(refreshTokenCookie.getValue());
+        if(userEmail!=null){
+            var user = _userRepository.findUserByEmail(userEmail).orElseThrow();
+            if(isTokenValid(refreshTokenCookie.getValue(), user)){
+                var accessToken=generateToken(user);
+                var newRefreshToken=generateRefreshToken(user);
+                Cookie cookie = new Cookie("refreshToken", newRefreshToken);
+                cookie.setHttpOnly(true);
+                cookie.setMaxAge(7 * 24 * 60 * 60+3*60*60);
+                response.addCookie(cookie);
+                var resp=new AuthTokens(accessToken, newRefreshToken);
+                serviceResponse.data=resp;
+                serviceResponse.success=true;
+                serviceResponse.message="Refresh and access token successfully updated.";
+                return newRefreshToken;
+            }else{
+                serviceResponse.data=null;
+                serviceResponse.success=false;
+                serviceResponse.message="You need to log-in";
+                return "err2";
+            }
+        }
+        return "err3";
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration){
