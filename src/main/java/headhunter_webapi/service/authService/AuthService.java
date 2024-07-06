@@ -60,12 +60,8 @@ public class AuthService implements IAuthService{
 
             _userRepository.save(user);
             var jwtToken= _tokenService.generateToken(user);
-            var refreshToken= _tokenService.generateRefreshToken(user);
-            Cookie cookie = new Cookie("refreshToken", refreshToken);
-            cookie.setHttpOnly(true);
-            cookie.setMaxAge(7 * 24 * 60 * 60+3*60*60);
-            cookie.setPath("/");
-            response.addCookie(cookie);
+            var refreshToken= _tokenService.generateAndSaveRefreshToken(user);
+            _tokenService.setRefreshTokenCookie(response, refreshToken);
             serviceResponse.data=new AuthTokens(jwtToken, refreshToken);
             serviceResponse.message="You have successfully registered.";
             serviceResponse.success=true;
@@ -93,12 +89,8 @@ public class AuthService implements IAuthService{
                     )
             );
             var jwtToken = _tokenService.generateToken(storedUser);
-            var refreshToken= _tokenService.generateRefreshToken(storedUser);
-            Cookie cookie = new Cookie("refreshToken", refreshToken);
-            cookie.setHttpOnly(true);
-            cookie.setMaxAge(7 * 24 * 60 * 60+3*60*60);
-            cookie.setPath("/");
-            response.addCookie(cookie);
+            var refreshToken= _tokenService.generateAndSaveRefreshToken(storedUser);
+            _tokenService.setRefreshTokenCookie(response, refreshToken);
             serviceResponse.data=new AuthTokens(jwtToken, refreshToken);
             serviceResponse.message="You have successfully logged in";
             serviceResponse.success=true;

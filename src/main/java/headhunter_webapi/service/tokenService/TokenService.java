@@ -1,6 +1,5 @@
 package headhunter_webapi.service.tokenService;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import headhunter_webapi.entity.AuthTokens;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.repository.UserRepository;
@@ -13,14 +12,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
 import java.security.Key;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +31,7 @@ public class TokenService implements ITokenService{
     public TokenService(UserRepository userRepository){
         _userRepository=userRepository;
     }
+    private final static int REFRESH_TOKEN_COOKIE_LIFETIME=7 * 24 * 60 * 60+3*60*60;
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
     @Value("${application.security.jwt.expiration}")
@@ -54,10 +52,17 @@ public class TokenService implements ITokenService{
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails){
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
-    public String generateRefreshToken(UserDetails userDetails){
+    public String generateAndSaveRefreshToken(UserDetails userDetails){
         String refreshToken=buildToken( new HashMap<>(), userDetails, refreshExpiration);
         saveRefreshToken(refreshToken);
         return refreshToken;
+    }
+    public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken){
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(REFRESH_TOKEN_COOKIE_LIFETIME);
+        cookie.setPath("/");
+        response.addCookie(cookie);
     }
 
     private void saveRefreshToken(String refreshToken){
@@ -67,35 +72,19 @@ public class TokenService implements ITokenService{
         storedUser.setTokenExpires(extractExpiration(refreshToken));
         _userRepository.save(storedUser);
     }
-    public static Cookie findCookieByName(Cookie[] cookies, String name) {
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(name)) {
-                    return cookie;
-                }
-            }
-        }
-        return null;
-    }
     public String refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var serviceResponse=new ServiceResponse<AuthTokens>();
-        Cookie[] cookies = request.getCookies();
-        Cookie refreshTokenCookie = findCookieByName(cookies, "refreshToken");
-
-
+        Cookie refreshTokenCookie = WebUtils.getCookie(request, "refreshToken");
         if(refreshTokenCookie==null){
-            return "err1";
+            return "empty refresh-token cookie";
         }
         final String userEmail=extractUserEmail(refreshTokenCookie.getValue());
         if(userEmail!=null){
             var user = _userRepository.findUserByEmail(userEmail).orElseThrow();
             if(isTokenValid(refreshTokenCookie.getValue(), user)){
                 var accessToken=generateToken(user);
-                var newRefreshToken=generateRefreshToken(user);
-                Cookie cookie = new Cookie("refreshToken", newRefreshToken);
-                cookie.setHttpOnly(true);
-                cookie.setMaxAge(7 * 24 * 60 * 60+3*60*60);
-                response.addCookie(cookie);
+                var newRefreshToken=generateAndSaveRefreshToken(user);
+                setRefreshTokenCookie(response, newRefreshToken);
                 var resp=new AuthTokens(accessToken, newRefreshToken);
                 serviceResponse.data=resp;
                 serviceResponse.success=true;
