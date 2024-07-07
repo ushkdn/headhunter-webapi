@@ -7,7 +7,6 @@ import headhunter_webapi.dto.authDto.ResetPasswordDto;
 import headhunter_webapi.entity.AuthTokens;
 import headhunter_webapi.entity.ServiceResponse;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.ResponseEntity;
 
 public interface IAuthService {
     ServiceResponse<AuthTokens> register(RegisterUserDto newUser, HttpServletResponse response);

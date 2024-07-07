@@ -31,7 +31,8 @@ public class TokenService implements ITokenService{
     public TokenService(UserRepository userRepository){
         _userRepository=userRepository;
     }
-    private final static int REFRESH_TOKEN_COOKIE_LIFETIME=7 * 24 * 60 * 60+3*60*60;
+    private final static int REFRESH_TOKEN_COOKIE_LIFETIME=3*60*60+1*60;
+//            7 * 24 * 60 * 60+3*60*60;
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
     @Value("${application.security.jwt.expiration}")
@@ -52,10 +53,8 @@ public class TokenService implements ITokenService{
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails){
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
-    public String generateAndSaveRefreshToken(UserDetails userDetails){
-        String refreshToken=buildToken( new HashMap<>(), userDetails, refreshExpiration);
-        saveRefreshToken(refreshToken);
-        return refreshToken;
+    public String generateRefreshToken(UserDetails userDetails){
+        return buildToken( new HashMap<>(), userDetails, REFRESH_TOKEN_COOKIE_LIFETIME);
     }
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken){
         Cookie cookie = new Cookie("refreshToken", refreshToken);
@@ -64,41 +63,49 @@ public class TokenService implements ITokenService{
         cookie.setPath("/");
         response.addCookie(cookie);
     }
+    private Cookie getCookie(HttpServletRequest request, String cookieName){
+        return WebUtils.getCookie(request, cookieName);
+    }
 
-    private void saveRefreshToken(String refreshToken){
+    public void saveRefreshToken(String refreshToken){
         var storedUser=_userRepository.findUserByEmail(extractUserEmail(refreshToken)).orElseThrow();
         storedUser.setRefreshToken(refreshToken);
         storedUser.setTokenCreated(extractCreation(refreshToken));
         storedUser.setTokenExpires(extractExpiration(refreshToken));
         _userRepository.save(storedUser);
     }
-    public String refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        var serviceResponse=new ServiceResponse<AuthTokens>();
-        Cookie refreshTokenCookie = WebUtils.getCookie(request, "refreshToken");
-        if(refreshTokenCookie==null){
-            return "empty refresh-token cookie";
-        }
-        final String userEmail=extractUserEmail(refreshTokenCookie.getValue());
-        if(userEmail!=null){
-            var user = _userRepository.findUserByEmail(userEmail).orElseThrow();
-            if(isTokenValid(refreshTokenCookie.getValue(), user)){
-                var accessToken=generateToken(user);
-                var newRefreshToken=generateAndSaveRefreshToken(user);
-                setRefreshTokenCookie(response, newRefreshToken);
-                var resp=new AuthTokens(accessToken, newRefreshToken);
-                serviceResponse.data=resp;
-                serviceResponse.success=true;
-                serviceResponse.message="Refresh and access token successfully updated.";
-                return newRefreshToken;
-            }else{
-                serviceResponse.data=null;
-                serviceResponse.success=false;
-                serviceResponse.message="You need to log-in";
-                return "err2";
+    public ServiceResponse<AuthTokens> refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var serviceResponse = new ServiceResponse<AuthTokens>();
+        try {
+
+            Cookie refreshTokenCookie = getCookie(request, "refreshToken");
+            if (refreshTokenCookie == null) {
+                throw new Exception("User not found. Please try to log-in again.");
             }
+            final String userEmail = extractUserEmail(refreshTokenCookie.getValue());
+            if (userEmail == null) {
+                throw new Exception("Failed to process email correctly.");
+            }
+            var user = _userRepository.findUserByEmail(userEmail).orElseThrow(()-> new Exception("User with this email not found."));
+            if (!isTokenValid(refreshTokenCookie.getValue(), user)) {
+                throw new Exception("Please log-in again, your session has expired");
+            }
+            var accessToken = generateToken(user);
+            var newRefreshToken = generateRefreshToken(user);
+            saveRefreshToken(newRefreshToken);
+            setRefreshTokenCookie(response, newRefreshToken);
+            serviceResponse.data = new AuthTokens(accessToken,newRefreshToken);
+            serviceResponse.success = true;
+            serviceResponse.message = "Refresh and access token successfully updated.";
+
+        } catch (Exception ex) {
+            serviceResponse.data = null;
+            serviceResponse.success = false;
+            serviceResponse.message = ex.getMessage();
         }
-        return "err3";
+        return serviceResponse;
     }
+
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration){
         return Jwts.builder()

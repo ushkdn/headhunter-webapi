@@ -11,14 +11,7 @@ import headhunter_webapi.entity.Role;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.repository.UserRepository;
 import headhunter_webapi.service.tokenService.TokenService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import org.antlr.v4.runtime.Token;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -60,7 +53,8 @@ public class AuthService implements IAuthService{
 
             _userRepository.save(user);
             var jwtToken= _tokenService.generateToken(user);
-            var refreshToken= _tokenService.generateAndSaveRefreshToken(user);
+            var refreshToken= _tokenService.generateRefreshToken(user);
+            _tokenService.saveRefreshToken(refreshToken);
             _tokenService.setRefreshTokenCookie(response, refreshToken);
             serviceResponse.data=new AuthTokens(jwtToken, refreshToken);
             serviceResponse.message="You have successfully registered.";
@@ -89,7 +83,8 @@ public class AuthService implements IAuthService{
                     )
             );
             var jwtToken = _tokenService.generateToken(storedUser);
-            var refreshToken= _tokenService.generateAndSaveRefreshToken(storedUser);
+            var refreshToken= _tokenService.generateRefreshToken(storedUser);
+            _tokenService.saveRefreshToken(refreshToken);
             _tokenService.setRefreshTokenCookie(response, refreshToken);
             serviceResponse.data=new AuthTokens(jwtToken, refreshToken);
             serviceResponse.message="You have successfully logged in";
