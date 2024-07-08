@@ -13,6 +13,11 @@ services:
         - postgres-data:/var/lib/postgresql/data
       restart: unless-stopped
 
+    redis:
+      image: redis
+      ports:
+        - "6379:6379"
+
     pgadmin:
       image: dpage/pgadmin4
       depends_on:

@@ -13,7 +13,7 @@ import java.util.List;
 @Table(name="user_")
 public class User implements UserDetails {
     @Id
-    @Column(name="Id")
+    @Column(name="user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "FirstName")
@@ -37,14 +37,18 @@ public class User implements UserDetails {
     private Boolean isVerified = false;
     @Column(name = "SecretCode")
     private String secretCode = "testCode";
-    @Column(name="RefreshToken")
-    private String refreshToken;
-    @Column(name="TokenCreated")
-    private Date tokenCreated;
-    @Column(name="TokenExpires")
-    private Date tokenExpires;
+    @OneToOne(mappedBy = "user")
+    private RefreshToken refreshToken;
     //private Resume resume;
 
+
+    public RefreshToken getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(RefreshToken refreshToken) {
+        this.refreshToken = refreshToken;
+    }
 
     public Long getId() {
         return id;
@@ -142,29 +146,7 @@ public class User implements UserDetails {
         this.secretCode = secretCode;
     }
 
-    public String getRefreshToken() {
-        return refreshToken;
-    }
 
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    public Date getTokenCreated() {
-        return tokenCreated;
-    }
-
-    public void setTokenCreated(    Date tokenCreated) {
-        this.tokenCreated = tokenCreated;
-    }
-
-    public Date getTokenExpires() {
-        return tokenExpires;
-    }
-
-    public void setTokenExpires(Date tokenExpires) {
-        this.tokenExpires = tokenExpires;
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

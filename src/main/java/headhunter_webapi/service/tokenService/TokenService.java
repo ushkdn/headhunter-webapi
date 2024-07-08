@@ -31,14 +31,13 @@ public class TokenService implements ITokenService{
     public TokenService(UserRepository userRepository){
         _userRepository=userRepository;
     }
-    private final static int REFRESH_TOKEN_COOKIE_LIFETIME=3*60*60+1*60;
-//            7 * 24 * 60 * 60+3*60*60;
+    private final static int REFRESH_TOKEN_COOKIE_LIFETIME=7 * 24 * 60 * 60+3*60*60;
     @Value("${application.security.jwt.secret-key}")
-    private String secretKey;
+    private String SECRET_KEY;
     @Value("${application.security.jwt.expiration}")
-    private long jwtExpiration;
+    private long JWT_EXPIRATION;
     @Value("${application.security.jwt.refresh-token.expiration}")
-    private long refreshExpiration;
+    private long REFRESH_TOKEN_EXPIRATION;
 
     public String extractUserEmail(String token){
         return extractClaim(token, Claims::getSubject);
@@ -51,10 +50,10 @@ public class TokenService implements ITokenService{
         return generateToken(new HashMap<>(), userDetails);
     }
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails){
-        return buildToken(extraClaims, userDetails, jwtExpiration);
+        return buildToken(extraClaims, userDetails, JWT_EXPIRATION);
     }
     public String generateRefreshToken(UserDetails userDetails){
-        return buildToken( new HashMap<>(), userDetails, REFRESH_TOKEN_COOKIE_LIFETIME);
+        return buildToken( new HashMap<>(), userDetails, REFRESH_TOKEN_EXPIRATION);
     }
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken){
         Cookie cookie = new Cookie("refreshToken", refreshToken);
@@ -140,7 +139,7 @@ public class TokenService implements ITokenService{
                 .getBody();
     }
     private Key getSignInKey(){
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
