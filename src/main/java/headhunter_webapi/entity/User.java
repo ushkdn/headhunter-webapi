@@ -37,18 +37,9 @@ public class User implements UserDetails {
     private Boolean isVerified = false;
     @Column(name = "SecretCode")
     private String secretCode = "testCode";
-    @OneToOne(mappedBy = "user")
-    private RefreshToken refreshToken;
     //private Resume resume;
 
 
-    public RefreshToken getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(RefreshToken refreshToken) {
-        this.refreshToken = refreshToken;
-    }
 
     public Long getId() {
         return id;

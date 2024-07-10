@@ -1,35 +1,20 @@
 package headhunter_webapi.entity;
 
-import jakarta.persistence.*;
-import org.springframework.data.redis.core.RedisHash;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.Serializable;
 import java.util.Date;
-@RedisHash(value="refreshToken")
-public class RefreshToken {
-    @OneToOne
-    @JoinColumn(name="user_id",referencedColumnName = "id")
-    private User user_email;
+public class RefreshToken implements Serializable {
+    @JsonProperty("token")
     private String token;
+    @JsonProperty("issuedAt")
     private Date issuedAt;
+    @JsonProperty("expiresAt")
     private Date expiresAt;
+
 
     public String getToken() {
         return token;
-    }
-
-    public User getUser_email() {
-        return user_email;
-    }
-
-    public RefreshToken(User user_email, String token, Date issuedAt, Date expiresAt) {
-        this.user_email = user_email;
-        this.token = token;
-        this.issuedAt = issuedAt;
-        this.expiresAt = expiresAt;
-    }
-
-    public void setUser_email(User user_email) {
-        this.user_email = user_email;
     }
 
     public void setToken(String token) {
@@ -52,6 +37,11 @@ public class RefreshToken {
         this.expiresAt = expiresAt;
     }
 
+    public RefreshToken( String token, Date issuedAt, Date expiresAt) {
+        this.token = token;
+        this.issuedAt = issuedAt;
+        this.expiresAt = expiresAt;
+    }
     public RefreshToken(){
 
     }
