@@ -16,28 +16,29 @@ public class User implements UserDetails {
     @Column(name="user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "FirstName")
+    @Column(name = "first_name")
     private String firstName;
-    @Column(name = "LastName")
+    @Column(name = "last_name")
     private String lastName;
-    @Column(name = "PhoneNumber")
+    @Column(name = "phone_number")
     private String phoneNumber;
-    @Column(name = "Email")
+    @Column(name = "email")
     private String email;
-    @Column(name = "Password")
+    @Column(name = "password")
     private String password;
-    @Column(name = "DateOfBirth")
+    @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
-    @Column(name = "Location")
+    @Column(name = "location")
     private String location;
     @Enumerated(EnumType.STRING)
-    @Column(name="Role")
+    @Column(name="role")
     private Role role;
-    @Column(name = "IsVerified")
+    @Column(name = "is_verified")
     private Boolean isVerified = false;
-    @Column(name = "SecretCode")
+    @Column(name = "secret_code")
     private String secretCode = "testCode";
-    //private Resume resume;
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<Resume> resume;
 
 
 

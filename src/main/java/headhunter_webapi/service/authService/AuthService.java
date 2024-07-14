@@ -9,7 +9,11 @@ import headhunter_webapi.dto.mapper.userMapper.GetUserDtoMapper;
 import headhunter_webapi.entity.AuthTokens;
 import headhunter_webapi.entity.Role;
 import headhunter_webapi.entity.ServiceResponse;
+import headhunter_webapi.repository.CacheRepository;
 import headhunter_webapi.repository.UserRepository;
+import headhunter_webapi.service.emailService.EmailService;
+import headhunter_webapi.service.emailService.IEmailService;
+import headhunter_webapi.service.tokenService.ITokenService;
 import headhunter_webapi.service.tokenService.TokenService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,24 +22,28 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 
 @Service
 public class AuthService implements IAuthService{
 
     private final UserRepository _userRepository;
     private final RegisterUserDtoMapper _registerUserDtoMapper;
-    private final GetUserDtoMapper _getUserDtoMapper;
     private final PasswordEncoder _passwordEncoder;
-    private final TokenService _tokenService;
+    private final ITokenService _tokenService;
     private final AuthenticationManager _authManager;
+    private final IEmailService _emailService;
+    private final CacheRepository _cacheRepository;
 
-    public AuthService(UserRepository userRepository, RegisterUserDtoMapper registerUserDtoMapper, GetUserDtoMapper getUserDtoMapper, PasswordEncoder passwordEncoder, TokenService tokenService, AuthenticationManager authManager) {
+    public AuthService(UserRepository userRepository, RegisterUserDtoMapper registerUserDtoMapper, PasswordEncoder passwordEncoder, ITokenService tokenService, AuthenticationManager authManager, IEmailService emailService, CacheRepository cacheRepository) {
         _userRepository = userRepository;
         _registerUserDtoMapper = registerUserDtoMapper;
-        _getUserDtoMapper = getUserDtoMapper;
         _passwordEncoder = passwordEncoder;
         _tokenService = tokenService;
         _authManager = authManager;
+        _emailService=emailService;
+        _cacheRepository=cacheRepository;
     }
 
     @Override
@@ -52,11 +60,15 @@ public class AuthService implements IAuthService{
             //email sender here with confirmation code(need verify)
 
             _userRepository.save(user);
-            var jwtToken= _tokenService.generateToken(user);
-            var refreshToken= _tokenService.generateRefreshToken(user);
-            _tokenService.saveRefreshToken(refreshToken);
-            _tokenService.setRefreshTokenCookie(response, refreshToken);
-            serviceResponse.data=new AuthTokens(jwtToken, refreshToken);
+            var secretCodeToVerifyEmail=_emailService.generateSecretCode();
+            _emailService.sendEmail(user.getEmail(),"Email verification", secretCodeToVerifyEmail);
+            _cacheRepository.save("secretCode", user.getEmail(), secretCodeToVerifyEmail, Duration.ofMinutes(3));
+//            var jwtToken= _tokenService.generateToken(user);
+//            var refreshToken= _tokenService.generateRefreshToken(user);
+//            _tokenService.saveRefreshToken(refreshToken);
+//            _tokenService.setRefreshTokenCookie(response, refreshToken);
+            serviceResponse.data=null;
+                    //new AuthTokens(jwtToken, refreshToken);
             serviceResponse.message="You have successfully registered.";
             serviceResponse.success=true;
         }catch(Exception ex){

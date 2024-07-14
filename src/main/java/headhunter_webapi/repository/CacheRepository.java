@@ -18,6 +18,7 @@ public class CacheRepository  {
 
     public <T> void save(String objectTitle, String key, T value, Duration duration){
         _redisTemplate.opsForValue().set(objectTitle+":"+key, value);
+        _redisTemplate.expire(objectTitle+":"+key, duration);
     }
     public <T> Optional<T> getData(String objectTitle, String key){
         return Optional.ofNullable((T) _redisTemplate.opsForValue().get(objectTitle+":"+key));

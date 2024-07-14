@@ -14,14 +14,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
 import java.security.Key;
-import java.sql.Ref;
 import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
@@ -63,6 +61,7 @@ public class TokenService implements ITokenService{
     public String generateRefreshToken(UserDetails userDetails){
         return buildToken( new HashMap<>(), userDetails, REFRESH_TOKEN_EXPIRATION);
     }
+    @Override
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken){
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
