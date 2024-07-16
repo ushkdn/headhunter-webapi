@@ -1,6 +1,7 @@
 package headhunter_webapi.service.tokenService;
 
 import headhunter_webapi.entity.AuthTokens;
+import headhunter_webapi.entity.CacheEntity;
 import headhunter_webapi.entity.RefreshToken;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.repository.CacheRepository;
@@ -74,7 +75,7 @@ public class TokenService implements ITokenService{
     }
     public void saveRefreshToken(String refreshToken) throws Exception {
         var storedUser=_userRepository.findUserByEmail(extractUserEmail(refreshToken)).orElseThrow(()->new Exception("User with this email not found."));
-        _cacheRepository.save("refreshToken", storedUser.getEmail(), new RefreshToken(
+        _cacheRepository.save(CacheEntity.REFRESH_TOKEN.toString(), storedUser.getEmail(), new RefreshToken(
                 refreshToken,
                 extractCreation(refreshToken),
                 extractExpiration(refreshToken)

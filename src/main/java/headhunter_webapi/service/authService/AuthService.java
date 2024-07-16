@@ -7,6 +7,7 @@ import headhunter_webapi.dto.authDto.ResetPasswordDto;
 import headhunter_webapi.dto.mapper.authMapper.RegisterUserDtoMapper;
 import headhunter_webapi.dto.mapper.userMapper.GetUserDtoMapper;
 import headhunter_webapi.entity.AuthTokens;
+import headhunter_webapi.entity.CacheEntity;
 import headhunter_webapi.entity.Role;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.repository.CacheRepository;
@@ -47,8 +48,8 @@ public class AuthService implements IAuthService{
     }
 
     @Override
-    public ServiceResponse<AuthTokens> register(RegisterUserDto newUser, HttpServletResponse response) {
-        var serviceResponse = new ServiceResponse<AuthTokens>();
+    public ServiceResponse<String> register(RegisterUserDto newUser, HttpServletResponse response) {
+        var serviceResponse = new ServiceResponse<String>();
         try{
             var user = _registerUserDtoMapper.apply(newUser);
             if(_userRepository.findUserByEmail(user.getEmail()).isPresent()){
@@ -57,19 +58,10 @@ public class AuthService implements IAuthService{
             var bcrypt = new BCryptPasswordEncoder();
             user.setPassword(_passwordEncoder.encode(user.getPassword()));
             user.setRole(Role.USER);
-            //email sender here with confirmation code(need verify)
-
             _userRepository.save(user);
-            var secretCodeToVerifyEmail=_emailService.generateSecretCode();
-            _emailService.sendEmail(user.getEmail(),"Email verification", secretCodeToVerifyEmail);
-            _cacheRepository.save("secretCode", user.getEmail(), secretCodeToVerifyEmail, Duration.ofMinutes(3));
-//            var jwtToken= _tokenService.generateToken(user);
-//            var refreshToken= _tokenService.generateRefreshToken(user);
-//            _tokenService.saveRefreshToken(refreshToken);
-//            _tokenService.setRefreshTokenCookie(response, refreshToken);
+
             serviceResponse.data=null;
-                    //new AuthTokens(jwtToken, refreshToken);
-            serviceResponse.message="You have successfully registered.";
+            serviceResponse.message=_emailService.send(user.getEmail()).message;
             serviceResponse.success=true;
         }catch(Exception ex){
             serviceResponse.data=null;
@@ -84,6 +76,9 @@ public class AuthService implements IAuthService{
         var serviceResponse = new ServiceResponse<AuthTokens>();
         try{
             var storedUser = _userRepository.findUserByEmail(user.email()).orElseThrow(()->new Exception("User not found."));
+            if(!storedUser.getVerified()){
+                throw new Exception("Please confirm your email first.");
+            }
             var bcryptVerification = new BCryptPasswordEncoder();
             if(!bcryptVerification.matches(user.password(), storedUser.getPassword())){
                 throw new Exception("Wrong password.");

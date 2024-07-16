@@ -25,7 +25,7 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ServiceResponse<AuthTokens> register(@Valid @RequestBody RegisterUserDto newUser, HttpServletResponse response){
+    public ServiceResponse<String> register(@Valid @RequestBody RegisterUserDto newUser, HttpServletResponse response){
         return _authService.register(newUser, response);
     }
     @PostMapping("/log-in")

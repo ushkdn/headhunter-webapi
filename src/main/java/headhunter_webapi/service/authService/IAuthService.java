@@ -9,7 +9,7 @@ import headhunter_webapi.entity.ServiceResponse;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface IAuthService {
-    ServiceResponse<AuthTokens> register(RegisterUserDto newUser, HttpServletResponse response);
+    ServiceResponse<String> register(RegisterUserDto newUser, HttpServletResponse response);
 
     ServiceResponse<AuthTokens> logIn(LogInUserDto user, HttpServletResponse response);
 

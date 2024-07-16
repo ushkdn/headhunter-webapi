@@ -16,4 +16,14 @@ public class EmailController {
         _emailService=emailService;
     }
 
+    @PostMapping("/verify/{id}")
+    public ServiceResponse<String> verify(@PathVariable Long id, @RequestBody String secretCode){
+        return _emailService.verify(id, secretCode);
+    }
+
+    @PostMapping("/send")
+    public ServiceResponse<String> send(@RequestBody String recipientEMail) throws Exception {
+        return _emailService.send(recipientEMail);
+    }
+
 }
