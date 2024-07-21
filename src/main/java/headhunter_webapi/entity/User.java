@@ -39,8 +39,24 @@ public class User implements UserDetails {
     private String secretCode = "testCode";
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Resume> resume;
+    private boolean passwordChangeRequest;
 
 
+    public List<Resume> getResume() {
+        return resume;
+    }
+
+    public void setResume(List<Resume> resume) {
+        this.resume = resume;
+    }
+
+    public boolean isPasswordChangeRequest() {
+        return passwordChangeRequest;
+    }
+
+    public void setPasswordChangeRequest(boolean passwordChangeRequest) {
+        this.passwordChangeRequest = passwordChangeRequest;
+    }
 
     public Long getId() {
         return id;

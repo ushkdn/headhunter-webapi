@@ -97,7 +97,7 @@ public class TokenService implements ITokenService{
             if (!isTokenValid(refreshTokenCookie.getValue(), user)) {
                 throw new Exception("Please log-in again, your session has expired.");
             }
-            Optional<RefreshToken> storedRefreshToken=_cacheRepository.getData("refreshToken", user.getEmail());
+            Optional<RefreshToken> storedRefreshToken=_cacheRepository.getData(CacheEntity.REFRESH_TOKEN.toString(), user.getEmail());
             if(storedRefreshToken.isEmpty()){
                 throw new Exception("Please log-in again. Your session has expired.");
             }

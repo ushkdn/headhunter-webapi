@@ -1,7 +1,9 @@
 package headhunter_webapi.service.emailService;
 
+import headhunter_webapi.dto.authDto.SendEmailToUserDto;
 import headhunter_webapi.entity.CacheEntity;
 import headhunter_webapi.entity.ServiceResponse;
+import headhunter_webapi.entity.User;
 import headhunter_webapi.repository.CacheRepository;
 import headhunter_webapi.repository.UserRepository;
 import jakarta.mail.internet.MimeMessage;
@@ -41,32 +43,53 @@ public class EmailService implements IEmailService{
 
     @Override
     @Async
-    public ServiceResponse<String> send(String recipientEmail) {
+    public ServiceResponse<String> send(SendEmailToUserDto recipientEmail) {
         var serviceResponse = new ServiceResponse<String>();
         try {
-            var storedUser=_userRepository.findUserByEmail(recipientEmail).orElseThrow(()->new Exception("User with this email not found."));
-            if(storedUser.getVerified()){
+            var storedUser=_userRepository.findUserByEmail(recipientEmail.email()).orElseThrow(()->new Exception("User with this email not found."));
+            if(storedUser.getVerified() && !storedUser.isPasswordChangeRequest()){
                 throw new Exception("You have already confirmed your email.");
+            }
+            var cacheType=determineEmailMessageType(storedUser);
+            if(cacheType==null){
+                throw new Exception("Unexpected error.");
             }
             SimpleMailMessage mailMessage= new SimpleMailMessage();
             mailMessage.setFrom(sender);
-            mailMessage.setTo(recipientEmail);
+            mailMessage.setTo(recipientEmail.email());
             var message=generateSecretCode();
-            var subject="Email verification";
+            var subject="";
+            if (cacheType == CacheEntity.VERIFY_EMAIL_CODE){
+                subject="Security code for email verification";
+            }
+            if(cacheType==CacheEntity.RESET_PASSWORD_CODE){
+                subject="Security code for password recovery";
+            }
             mailMessage.setSubject(subject);
             mailMessage.setText(message);
             _javaMailSender.send(mailMessage);
 
-            _cacheRepository.save(CacheEntity.SECRET_CODE.toString(), recipientEmail, message, Duration.ofMinutes(3));
+
+            _cacheRepository.save(cacheType.toString(), recipientEmail.email(), message, Duration.ofMinutes(3));
             serviceResponse.data = null;
             serviceResponse.success = true;
-            serviceResponse.message = String.format("Security code for %s successfully sent to your email.", subject);
+            serviceResponse.message = String.format("%s successfully sent to your email.", subject);
         } catch (Exception ex) {
             serviceResponse.data = null;
             serviceResponse.success = false;
             serviceResponse.message = ex.getMessage();
         }
         return serviceResponse;
+    }
+
+    private CacheEntity determineEmailMessageType(User storedUser){
+            if(!storedUser.getVerified()){
+                return CacheEntity.VERIFY_EMAIL_CODE;
+            }
+            if(storedUser.isPasswordChangeRequest()){
+                return CacheEntity.RESET_PASSWORD_CODE;
+            }
+            return null;
     }
 
 
@@ -78,9 +101,9 @@ public class EmailService implements IEmailService{
             if(storedUser.getVerified()){
                 throw new Exception("You have already confirmed your email.");
             }
-            var cachedSecretCode=_cacheRepository.getData(CacheEntity.SECRET_CODE.toString(), storedUser.getEmail()).orElseThrow(()->new Exception("Secret code has expired, click resend code button."));
-            if(!secretCode.equals(cachedSecretCode)){
-                throw new Exception("Wrong secret code.");
+            var cachedVerifyEmailCode=_cacheRepository.getData(CacheEntity.VERIFY_EMAIL_CODE.toString(), storedUser.getEmail()).orElseThrow(()->new Exception("Security code for email verification has expired, click resend code button."));
+            if(!secretCode.equals(cachedVerifyEmailCode)){
+                throw new Exception("Wrong security code.");
             }
             storedUser.setVerified(true);
             _userRepository.save(storedUser);

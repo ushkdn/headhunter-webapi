@@ -1,9 +1,6 @@
 package headhunter_webapi.service.authService;
 
-import headhunter_webapi.dto.authDto.ForgotPasswordDto;
-import headhunter_webapi.dto.authDto.LogInUserDto;
-import headhunter_webapi.dto.authDto.RegisterUserDto;
-import headhunter_webapi.dto.authDto.ResetPasswordDto;
+import headhunter_webapi.dto.authDto.*;
 import headhunter_webapi.dto.mapper.authMapper.RegisterUserDtoMapper;
 import headhunter_webapi.dto.mapper.userMapper.GetUserDtoMapper;
 import headhunter_webapi.entity.AuthTokens;
@@ -24,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Optional;
 
 
 @Service
@@ -55,13 +53,12 @@ public class AuthService implements IAuthService{
             if(_userRepository.findUserByEmail(user.getEmail()).isPresent()){
                 throw new Exception("Email already taken!");
             }
-            var bcrypt = new BCryptPasswordEncoder();
             user.setPassword(_passwordEncoder.encode(user.getPassword()));
             user.setRole(Role.USER);
             _userRepository.save(user);
 
             serviceResponse.data=null;
-            serviceResponse.message=_emailService.send(user.getEmail()).message;
+            serviceResponse.message=_emailService.send(new SendEmailToUserDto(user.getEmail())).message;
             serviceResponse.success=true;
         }catch(Exception ex){
             serviceResponse.data=null;
@@ -109,9 +106,13 @@ public class AuthService implements IAuthService{
         var serviceResponse = new ServiceResponse<String>();
         try{
             var storedUser = _userRepository.findUserByEmail(userMetaData.email()).orElseThrow(()->new Exception("User not found."));
-            //email sender here
+            if(!storedUser.getVerified()){
+                throw new Exception("Please confirm your email first.");
+            }
+            storedUser.setPasswordChangeRequest(true);
+            _userRepository.save(storedUser);
             serviceResponse.data=null;
-            serviceResponse.message="Security code sent to your email.";
+            serviceResponse.message=_emailService.send(new SendEmailToUserDto(storedUser.getEmail())).message;
             serviceResponse.success=true;
         }catch(Exception ex){
             serviceResponse.data=null;
@@ -125,18 +126,26 @@ public class AuthService implements IAuthService{
     public ServiceResponse<String> resetPassword(Long id, ResetPasswordDto userData){
         var serviceResponse = new ServiceResponse<String>();
         try{
+            if(!userData.password().equals(userData.confirmPassword())){
+                throw new Exception("Confirm password must be equal to password.");
+            }
             var storedUser = _userRepository.findById(id).orElseThrow(()-> new Exception("User not found"));
             if(!storedUser.getVerified()){
                 throw new Exception("You have not verified your email.");
             }
-            //there should be a secret code check
+            if(!storedUser.isPasswordChangeRequest()){
+                throw new Exception("You have not submitted a request to change your password.");
+            }
+            var cachedCodeForPasswordRecovery=_cacheRepository.getData(CacheEntity.RESET_PASSWORD_CODE.toString(), storedUser.getEmail()).orElseThrow(()-> new Exception("Security code for password recovery has expired, click resend code button."));
+            if(!cachedCodeForPasswordRecovery.equals(userData.code())){
+                throw new Exception("Wrong security code.");
+            }
             var bcrypt = new BCryptPasswordEncoder();
             storedUser.setPassword(bcrypt.encode(userData.password()));
+            _userRepository.save(storedUser);
             serviceResponse.data=null;
             serviceResponse.message="You have successfully changed your password.";
             serviceResponse.success=true;
-            _userRepository.save(storedUser);
-
         }catch(Exception ex){
             serviceResponse.data=null;
             serviceResponse.message=ex.getMessage();

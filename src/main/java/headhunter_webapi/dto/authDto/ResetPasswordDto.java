@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 public record ResetPasswordDto(
         @NotEmpty(message = "Code cannot be empty.")
-        @Size(min=8, max=8, message = "The code must be 8 characters long.")
+        @Size(min=10, max=10, message = "The code must be 10 characters long.")
         String code,
         @NotEmpty(message = "Password cannot be empty.")
         @Size(min=10, max=20, message = "Password must be between 10 and 20 characters.")

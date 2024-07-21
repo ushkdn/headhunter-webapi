@@ -1,8 +1,10 @@
 package headhunter_webapi.controller;
 
+import headhunter_webapi.dto.authDto.SendEmailToUserDto;
 import headhunter_webapi.entity.ServiceResponse;
 import headhunter_webapi.service.emailService.IEmailService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,7 +24,7 @@ public class EmailController {
     }
 
     @PostMapping("/send")
-    public ServiceResponse<String> send(@RequestBody String recipientEMail) throws Exception {
+    public ServiceResponse<String> send(@Valid @RequestBody SendEmailToUserDto recipientEMail) throws Exception {
         return _emailService.send(recipientEMail);
     }
 
